@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh_TW">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="TEDxNCTU 2016">
+    <meta name="author" content="Microsheep">
+    <meta name="keywords" content="TEDxNCTU">
+    <link rel="shortcut icon" href="./asset/logo.png">
+    <title>TEDxNCTU 拍照互動</title>
+    <!-- ALL CSS -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.6/semantic.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="ui grid" style="padding:10px;">
+        <div class="centered row">
+            <div class="fourteen wide column">
+                <div class="ui grid">
+                    <div class="centered row">
+                        <div class="fourteen wide column" id="out_photo_div" style="display:none">
+                            <div class="ui fluid image">
+                                <a class="ui blue ribbon label">
+                                    <i class="heart icon"></i>Processed
+                                </a>
+                                <img src="" id="out_photo">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="centered row">
+                        <div class="fourteen wide column" id="in_photo_div">
+                            <div class="ui fluid image">
+                                <a class="ui green ribbon label">
+                                    <i class="heart icon"></i>Original
+                                </a>
+                                <img src="" id="in_photo">
+                                <img src="./asset/bg.png" class="cover" style="position: absolute;top: 0;left: 0;">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="centered row" id="webcam_div" style="display: none;">
+                        <div class="fourteen wide column">
+                            <div id="webcam"></div>
+                            <img src="./asset/bg.png" class="cover" style="position: absolute;top: 0;left: 0;">
+                        </div>
+                    </div>
+                    <div class="centered row">
+                        <div class="fourteen wide column">
+                            <canvas id="trans_photo" width="1280" height="720" style="display:none"></canvas>
+                        </div>
+                    </div>
+                    <div class="centered row">
+                        <div class="fourteen wide column">
+                            <img src="./asset/bg.png" id="logo_img" style="display:none">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="two wide column">
+                <div class="ui grid">
+                    <div class="centered row" style="display: none;">
+                        <div class="fourteen wide column">
+                            <div class="ui labeled input">
+                                <div class="ui label">Number of Colors Left</div>
+                                <input id="colors" type="number" min="5" value="15" placeholder="Number of Colors Left (EX: 15)">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="centered row" style="display: none;">
+                        <div class="fourteen wide column">
+                            <div class="ui checkbox">
+                                <input type="checkbox" id="logo" checked="true">
+                                <label>Add LOGO</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="centered row" style="display: none;">
+                        <div class="fourteen wide column">
+                            <span>File Mode</span>
+                            <div class="ui slider checkbox">
+                                <input type="checkbox" id="source" onclick="source();" checked="true">
+                                <label>WebCam Mode</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="centered row" id="display_file_input" style="display: none;">
+                        <div class="fourteen wide column">
+                            <div class="ui input">
+                                <input id="fileupload" type="file" onchange="readURL(this);">
+                            </div>
+                            <p>畫質不要太高，因為圖像處理會在您的電腦上跑，怕您的電腦跑不動 (理想在 1280*720 附近)</p>
+                        </div>
+                    </div>
+                    <div class="centered row">
+                        <div class="fourteen wide column" style="text-align:center">
+                            <div class="ui vertical buttons">
+                                <button class="ui button" id="snap_button" onclick="take_snapshot();" style="display: none;">SnapShot</button>
+                                <button class="ui button" id="resnap_button" onclick="continue_snapshot();" style="display: none;">Retry</button>
+                                <button class="ui button" onclick="process();">Process</button>
+                                <button class="ui button" id="download_button" onclick="download();">Download</button>
+                            </div>
+                            <span id="info"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ALL JavaScripts -->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.6/semantic.min.js"></script>
+    <script src="./asset/webcam.min.js"></script>
+    <script src="./asset/rgbquant.js"></script>
+    <script>
+    var photo_w = 1280;
+    var photo_h = 720;
+
+    function take_snapshot() {
+        $("#snap_button")[0].style.display = "none";
+        $("#in_photo_div")[0].style.display = "";
+        $("#out_photo_div")[0].style.display = "none";
+        $("#out_photo")[0].src = "";
+        $("#webcam_div")[0].style.display = "none";
+        Webcam.snap(function(data_uri) {
+            $("#in_photo")[0].src = data_uri;
+        });
+        $("#resnap_button")[0].style.display = "";
+    }
+
+    function continue_snapshot(){
+        $("#snap_button")[0].style.display = "";
+        $("#resnap_button")[0].style.display = "none";
+        $("#in_photo_div")[0].style.display = "none";
+        $("#out_photo_div")[0].style.display = "none";
+        $("#in_photo")[0].src = "";
+        $("#out_photo")[0].src = "";
+        $("#webcam_div")[0].style.display = "";
+    }
+
+    function source(){
+        if($('#source')[0].checked){
+            $("#display_file_input")[0].style.display = "none";
+            $("#in_photo_div")[0].style.display = "none";
+            $("#out_photo_div")[0].style.display = "none";
+            $("#snap_button")[0].style.display = "";
+            $("#resnap_button")[0].style.display = "none";
+            $("#webcam_div")[0].style.display = "";
+            $("#in_photo")[0].src = "";
+            $("#out_photo")[0].src = "";
+            $("#info")[0].innerHTML = "";
+            Webcam.set({
+                width: photo_w,
+                height: photo_h,
+            });
+            Webcam.attach('#webcam');
+            $("#webcam")[0].style.width="100%";
+            $("video")[0].style.width="100%";
+            $("#webcam")[0].style.height="100%";
+            $("video")[0].style.height="100%";
+        }
+        else{
+            $("#display_file_input")[0].style.display = "";
+            $("#in_photo_div")[0].style.display = "none";
+            $("#out_photo_div")[0].style.display = "none";
+            $("#snap_button")[0].style.display = "none";
+            $("#resnap_button")[0].style.display = "none";
+            $("#webcam_div")[0].style.display = "none";
+            $("#in_photo")[0].src = "";
+            $("#out_photo")[0].src = "";
+            $("#info")[0].innerHTML = "";
+            Webcam.reset('#webcam');
+        }
+    }
+
+    function readURL(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                $("#in_photo")[0].src =  e.target.result;
+                var i = new Image();
+                i.onload = function(){
+                    photo_w = i.width;
+                    photo_h = i.height;
+                };
+                i.src = e.target.result;
+            }
+            reader.readAsDataURL(input.files[0]);
+            $("#in_photo_div")[0].style.display = "";
+            $("#out_photo_div")[0].style.display = "none";
+        }
+    }
+
+    function process() {
+        $("#out_photo")[0].src = "";
+        $("#info")[0].innerHTML = "Processing!";
+
+        setTimeout(function (){
+            // options with defaults (not required)
+            var opts = {
+                colors: $("#colors").val(),             // desired palette size
+                method: 2,               // histogram method, 2: min-population threshold within subregions; 1: global top-population
+                boxSize: [64,64],        // subregion dims (if method = 2)
+                boxPxls: 2,              // min-population threshold (if method = 2)
+                initColors: 4096,        // # of top-occurring colors  to start with (if method = 1)
+                minHueCols: 0,           // # of colors per hue group to evaluate regardless of counts, to retain low-count hues
+                dithKern: null,          // dithering kernel name, see available kernels in docs below
+                dithDelta: 0,            // dithering threshhold (0-1) e.g: 0.05 will not dither colors with <= 5% difference
+                dithSerp: false,         // enable serpentine pattern dithering
+                palette: [],             // a predefined palette to start with in r,g,b tuple format: [[r,g,b],[r,g,b]...]
+                reIndex: false,          // affects predefined palettes only. if true, allows compacting of sparsed palette once target palette size is reached. also enables palette sorting.
+                useCache: true,          // enables caching for perf usually, but can reduce perf in some cases, like pre-def palettes
+                cacheFreq: 10,           // min color occurance count needed to qualify for caching
+                colorDist: "euclidean",  // method used to determine color distance, can also be "manhattan"
+            };
+            var trans = new RgbQuant(opts);
+            console.log("[Process] Trans init DONE");
+
+            // analyze histograms
+            trans.sample($("#in_photo")[0]);
+            console.log("[Process] Histograms DONE");
+            // reduce images
+            console.log("[Process] Reduce Image Start");
+            var out = trans.reduce($("#in_photo")[0]);
+            console.log("[Process] Reduce Image Done");
+
+            console.log("[Process] Drawing Start");
+            var canvas = $("#trans_photo")[0];
+            var ctx = canvas.getContext("2d");
+            $("#trans_photo")[0].width = photo_w;
+            $("#trans_photo")[0].height = photo_h;
+            var imgData = ctx.createImageData(photo_w,photo_h);
+            for (var i=0;i < out.length; i+=4) {
+                imgData.data[i]   = out[i];   //red
+                imgData.data[i+1] = out[i+1]; //green
+                imgData.data[i+2] = out[i+2]; //blue
+                imgData.data[i+3] = out[i+3]; //alpha
+            }
+            ctx.putImageData(imgData,0,0);
+
+            if($('#logo')[0].checked){
+                //ctx.drawImage($("#logo_img")[0], 50, photo_h-200, 150, 150);
+                ctx.drawImage($("#logo_img")[0], 0, 0, photo_w, photo_h);
+                console.log("[Process] Added LOGO");
+            }
+
+            var o_img = canvas.toDataURL("image/jpeg");
+            $("#out_photo")[0].src = o_img;
+            $("#info")[0].innerHTML = "Done!";
+            $("#out_photo_div")[0].style.display = "";
+            console.log("[Process] Drawing Done");
+
+            $("#download_button")[0].click();
+        }, 1000);
+    };
+
+    function download(){
+        var a = document.createElement('a');
+        a.href = $("#out_photo")[0].src;
+        a.download = 'ted_photo.jpg';
+        a.click();
+    };
+
+    document.onkeydown = function (e) {
+        e = e || window.event;
+        //console.log(e.key);
+        if(e.key=="PageUp" || e.key=="PageDown"){
+            if($("#webcam_div")[0].style.display == "none"){
+                console.log("RESNAP");
+                $("#resnap_button")[0].click();
+            }
+            else{
+                console.log("SNAP");
+                $("#snap_button")[0].click();
+            }
+        }
+    };
+
+    $(function(){
+        source();
+    });
+
+    </script>
+</body>
+</html>
